@@ -1,3 +1,4 @@
+import { COLORS } from "./constant";
 import k from "./kaplayCtx";
 
 k.loadSprite("menu", "./graphics/menu.png");
@@ -21,7 +22,7 @@ k.scene("main-menu", () => {
       size: 8,
     }),
     k.pos(10, 215),
-    k.color("#9FA2CB"),
+    k.color(COLORS.BLUE),
     k.opacity(0.5),
   ]);
 
@@ -34,7 +35,7 @@ k.scene("main-menu", () => {
       size: 8,
     }),
     k.pos(55, 184),
-    k.color("#CB7387"),
+    k.color(COLORS.RED),
   ]);
 
   k.onClick(() => {
