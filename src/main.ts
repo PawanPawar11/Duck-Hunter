@@ -3,6 +3,7 @@ import k from "./kaplayCtx";
 import { formatScore } from "./utils";
 
 k.loadSprite("menu", "./graphics/menu.png");
+k.loadSprite("background", "./graphics/background.png");
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
 
 k.scene("main-menu", () => {
@@ -44,7 +45,13 @@ k.scene("main-menu", () => {
   });
 });
 
-k.scene("game", () => {});
+k.scene("game", () => {
+  k.setCursor("none");
+
+  k.add([k.rect(k.width(), k.height()), k.color(COLORS.BLUE), "sky"]);
+
+  k.add([k.sprite("background"), k.pos(0, -10), k.z(1)]);
+});
 
 k.scene("game-over", () => {});
 
