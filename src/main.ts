@@ -1,5 +1,6 @@
 import { COLORS } from "./constant";
 import k from "./kaplayCtx";
+import { formatScore } from "./utils";
 
 k.loadSprite("menu", "./graphics/menu.png");
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
@@ -30,7 +31,7 @@ k.scene("main-menu", () => {
   k.setData("best-score", bestScore);
 
   k.add([
-    k.text(`TOP SCORE: ${bestScore.toString().padStart(6, "0")}`, {
+    k.text(`TOP SCORE: ${formatScore(bestScore, 6)}`, {
       font: "nes",
       size: 8,
     }),
