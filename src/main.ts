@@ -1,4 +1,4 @@
-import { COLORS } from "./constant";
+import { COLORS, fontConfig } from "./constant";
 import gameManager from "./gameManager";
 import k from "./kaplayCtx";
 import { formatScore } from "./utils";
@@ -58,13 +58,13 @@ k.scene("game", () => {
   k.add([k.sprite("background"), k.pos(0, -10), k.z(1)]);
 
   const score = k.add([
-    k.text(formatScore(0, 6), { font: "nes", size: 8 }),
+    k.text(formatScore(0, 6), fontConfig),
     k.pos(192, 197),
     k.z(2),
   ]);
 
   const roundCount = k.add([
-    k.text("1", { font: "nes", size: 8 }),
+    k.text("1", fontConfig),
     k.pos(42, 182),
     k.z(2),
     k.color(COLORS.RED),
@@ -103,13 +103,13 @@ k.scene("game", () => {
       ]);
 
       textBox.add([
-        k.text("ROUND", { font: "nes", size: 8 }),
+        k.text("ROUND", fontConfig),
         k.anchor("center"),
         k.pos(0, -10),
       ]);
 
       textBox.add([
-        k.text(String(gameManager.currentRoundNb), { font: "nes", size: 8 }),
+        k.text(String(gameManager.currentRoundNb), fontConfig),
         k.anchor("center"),
         k.pos(0, 4),
       ]);
