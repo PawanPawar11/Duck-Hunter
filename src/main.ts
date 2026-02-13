@@ -6,8 +6,10 @@ import { formatScore } from "./utils";
 k.loadSprite("menu", "./graphics/menu.png");
 k.loadSprite("background", "./graphics/background.png");
 k.loadSprite("cursor", "./graphics/cursor.png");
+k.loadSprite("text-box", "./graphics/text-box.png");
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
 k.loadSound("gun-shot", "./sounds/gun-shot.wav");
+k.loadSound("ui-appear", "./sounds/ui-appear.wav");
 
 k.scene("main-menu", () => {
   k.add([k.sprite("menu")]);
@@ -80,6 +82,47 @@ k.scene("game", () => {
     k.z(2),
     k.color(0, 0, 0),
   ]);
+
+  const roundStartController = gameManager.onStateEnter(
+    "round-start",
+    async (isFirstRound: Boolean) => {
+      if (!isFirstRound) {
+        gameManager.preySpeed += 50;
+      }
+
+      k.play("ui-appear", { volume: 1 });
+
+      gameManager.currentRoundNb++;
+      roundCount.text = String(gameManager.currentRoundNb);
+
+      const textBox = k.add([
+        k.sprite("text-box"),
+        k.anchor("center"),
+        k.pos(k.center().x, k.center().y),
+        k.z(2),
+      ]);
+
+      textBox.add([
+        k.text("ROUND", { font: "nes", size: 8 }),
+        k.anchor("center"),
+        k.pos(0, -10),
+      ]);
+
+      textBox.add([
+        k.text(String(gameManager.currentRoundNb), { font: "nes", size: 8 }),
+        k.anchor("center"),
+        k.pos(0, 4),
+      ]);
+
+      await k.wait(1);
+
+      k.destroy(textBox);
+
+      gameManager.enterState("hunt-start");
+    },
+  );
+
+  gameManager.enterState("round-start");
 
   const cursor = k.add([
     k.sprite("cursor"),
