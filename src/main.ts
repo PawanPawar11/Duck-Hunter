@@ -88,6 +88,15 @@ k.scene("game", () => {
     k.z(3),
   ]);
 
+  k.onClick(() => {
+    if (gameManager.state === "hunt" && !gameManager.isGamePaused) {
+      if (gameManager.nbBulletsLeft > 0) {
+        k.play("gun-shot", { volume: 0.5 });
+        gameManager.nbBulletsLeft--;
+      }
+    }
+  });
+
   k.onUpdate(() => {
     score.text = formatScore(gameManager.currentScore, 6);
     bulletUIMask.width = (3 - gameManager.nbBulletsLeft) * 7;
