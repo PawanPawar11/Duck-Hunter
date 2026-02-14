@@ -1,4 +1,5 @@
 import { COLORS, fontConfig } from "./constant";
+import makeDog from "./entities/dog";
 import gameManager from "./gameManager";
 import k from "./kaplayCtx";
 import { formatScore } from "./utils";
@@ -7,9 +8,34 @@ k.loadSprite("menu", "./graphics/menu.png");
 k.loadSprite("background", "./graphics/background.png");
 k.loadSprite("cursor", "./graphics/cursor.png");
 k.loadSprite("text-box", "./graphics/text-box.png");
+k.loadSprite("dog", "./graphics/dog.png", {
+  sliceX: 4,
+  sliceY: 3,
+  anims: {
+    search: {
+      from: 0,
+      to: 3,
+      speed: 6,
+      loop: true,
+    },
+    snif: {
+      from: 4,
+      to: 5,
+      speed: 4,
+      loop: true,
+    },
+    detect: 6,
+    jump: { from: 7, to: 8, speed: 6 },
+    catch: 9,
+    mock: { from: 10, to: 11, loop: true },
+  },
+});
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
 k.loadSound("gun-shot", "./sounds/gun-shot.wav");
 k.loadSound("ui-appear", "./sounds/ui-appear.wav");
+k.loadSound("sniffing", "./sounds/sniffing.wav");
+k.loadSound("barking", "./sounds/barking.wav");
+k.loadSound("laughing", "./sounds/laughing.wav");
 
 k.scene("main-menu", () => {
   k.add([k.sprite("menu")]);
@@ -82,6 +108,9 @@ k.scene("game", () => {
     k.z(2),
     k.color(0, 0, 0),
   ]);
+
+  const dog = makeDog(k.vec2(0, k.center().y));
+  dog.searchForDucks();
 
   const roundStartController = gameManager.onStateEnter(
     "round-start",
