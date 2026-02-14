@@ -36,6 +36,7 @@ k.loadSound("ui-appear", "./sounds/ui-appear.wav");
 k.loadSound("sniffing", "./sounds/sniffing.wav");
 k.loadSound("barking", "./sounds/barking.wav");
 k.loadSound("laughing", "./sounds/laughing.wav");
+k.loadSound("successful-hunt", "./sounds/successful-hunt.wav");
 
 k.scene("main-menu", () => {
   k.add([k.sprite("menu")]);

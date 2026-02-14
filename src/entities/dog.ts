@@ -12,6 +12,9 @@ const makeDog = (position: Vec2) => {
   const laughingSound = k.play("laughing");
   laughingSound.stop();
 
+  const successfulHuntSound = k.play("successful-hunt");
+  successfulHuntSound.stop();
+
   return k.add([
     k.sprite("dog"),
     k.pos(position),
@@ -85,6 +88,46 @@ const makeDog = (position: Vec2) => {
 
           gameManager.enterState("round-start", true);
         });
+      },
+
+      async slideUpAndDown(this: GameObj) {
+        await k.tween(
+          this.pos.y,
+          90,
+          0.5,
+          (newY) => (this.pos.y = newY),
+          k.easings.linear,
+        );
+
+        await k.wait(1);
+
+        await k.tween(
+          this.pos.y,
+          125,
+          0.5,
+          (newY) => (this.pos.y = newY),
+          k.easings.linear,
+        );
+      },
+
+      async catchFallenDuck(this: GameObj) {
+        successfulHuntSound.play();
+
+        this.play("catch");
+
+        await this.slideUpAndDown();
+
+        gameManager.enterState("hunt-end");
+      },
+
+      async mockPlayer(this: GameObj) {
+        laughingSound.play();
+
+        this.play("mock");
+
+        await this.slideUpAndDown();
+
+        gameManager.enterState("hunt-end");
       },
     },
   ]);
