@@ -30,6 +30,24 @@ k.loadSprite("dog", "./graphics/dog.png", {
     mock: { from: 10, to: 11, loop: true },
   },
 });
+k.loadSprite("duck", "./graphics/duck.png", {
+  sliceX: 8,
+  sliceY: 1,
+  anims: {
+    "flight-diagonal": {
+      from: 0,
+      to: 2,
+      loop: true,
+    },
+    "flight-side": {
+      from: 3,
+      to: 5,
+      loop: true,
+    },
+    shot: 6,
+    fall: 7,
+  },
+});
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
 k.loadSound("gun-shot", "./sounds/gun-shot.wav");
 k.loadSound("ui-appear", "./sounds/ui-appear.wav");
@@ -37,6 +55,9 @@ k.loadSound("sniffing", "./sounds/sniffing.wav");
 k.loadSound("barking", "./sounds/barking.wav");
 k.loadSound("laughing", "./sounds/laughing.wav");
 k.loadSound("successful-hunt", "./sounds/successful-hunt.wav");
+k.loadSound("quacking", "./sounds/quacking.wav");
+k.loadSound("flapping", "./sounds/flapping.ogg");
+k.loadSound("fall", "./sounds/fall.wav");
 
 k.scene("main-menu", () => {
   k.add([k.sprite("menu")]);
@@ -162,7 +183,7 @@ k.scene("game", () => {
   ]);
 
   k.onClick(() => {
-    if (gameManager.state === "hunt" && !gameManager.isGamePaused) {
+    if (gameManager.state === "hunt-start" && !gameManager.isGamePaused) {
       if (gameManager.nbBulletsLeft > 0) {
         k.play("gun-shot", { volume: 0.5 });
         gameManager.nbBulletsLeft--;
