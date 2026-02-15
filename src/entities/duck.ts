@@ -30,6 +30,7 @@ const makeDuck = (duckId: string, speed: number) => {
       aliveTime: 0,
       escapeAfter: 5,
       direction,
+      duckId,
       speed,
 
       setBehavior(this: GameObj) {
