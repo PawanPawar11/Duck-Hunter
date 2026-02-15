@@ -1,7 +1,7 @@
 export const COLORS = {
-  BLUE: "#9FA2CB",
+  SKY_BLUE: "#9FA2CB",
   RED: "#CB7387",
-  BEIGE: "#FFFCC5",
+  WARNING_BEIGE: "#FFFCC5",
 };
 
 export const FONT_CONFIG = {

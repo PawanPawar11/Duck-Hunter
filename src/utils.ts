@@ -1,5 +1,4 @@
-const formatScore = (score: number, nbDigits: number) => {
-  return score.toString().padStart(nbDigits, "0");
-};
+const formatScore = (score: number, digits: number) =>
+  score.toString().padStart(digits, "0");
 
 export default formatScore;

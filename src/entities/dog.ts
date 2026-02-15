@@ -1,132 +1,119 @@
-import type { GameObj, Vec2, StateComp, TimerComp } from "kaplay";
+import type { GameObj, Vec2 } from "kaplay";
 import k from "../kaplayCtx";
 import gameManager from "../gameManager";
 
-const makeDog = (position: Vec2) => {
-  const sniffingSound = k.play("sniffing", { volume: 2 });
-  sniffingSound.stop();
+const JUMP_HEIGHT = 90;
+const GROUND_Y = 125;
 
-  const barkingSound = k.play("barking");
-  barkingSound.stop();
+const makeDog = (startPosition: Vec2) => {
+  const sounds = {
+    sniff: k.play("sniffing", { volume: 2 }),
+    bark: k.play("barking"),
+    laugh: k.play("laughing"),
+    success: k.play("successful-hunt"),
+  };
 
-  const laughingSound = k.play("laughing");
-  laughingSound.stop();
-
-  const successfulHuntSound = k.play("successful-hunt");
-  successfulHuntSound.stop();
+  Object.values(sounds).forEach((s) => s.stop());
 
   return k.add([
     k.sprite("dog"),
-    k.pos(position),
-    k.state("search", ["search", "snif", "detect", "jump", "drop"]),
+    k.pos(startPosition),
     k.z(2),
+    k.state("walking", [
+      "walking",
+      "sniffing",
+      "detecting",
+      "jumping",
+      "landing",
+    ]),
+
     {
-      speed: 15,
-      searchForDucks(this: GameObj) {
-        let nbSnifs = 0;
+      walkSpeed: 15,
 
-        this.onStateEnter("search", () => {
+      startSearching(this: GameObj) {
+        let sniffCount = 0;
+
+        this.onStateEnter("walking", () => {
           this.play("search");
-
-          k.wait(2, () => {
-            this.enterState("snif");
-          });
+          k.wait(2.5, () => this.enterState("sniffing"));
         });
 
-        this.onStateUpdate("search", () => {
-          this.move(this.speed, 0);
+        this.onStateUpdate("walking", () => {
+          this.move(this.walkSpeed, 0);
         });
 
-        this.onStateEnter("snif", () => {
-          nbSnifs++;
+        this.onStateEnter("sniffing", () => {
+          sniffCount++;
           this.play("snif");
-          sniffingSound.play();
+          sounds.sniff.play();
 
-          k.wait(2, () => {
-            sniffingSound.stop();
-            if (nbSnifs === 2) {
-              this.enterState("detect");
-              return;
+          k.wait(2.5, () => {
+            if (sniffCount >= 2) {
+              this.enterState("detecting");
+            } else {
+              this.enterState("walking");
             }
-            this.enterState("search");
           });
         });
 
-        this.onStateEnter("detect", () => {
-          barkingSound.play();
+        this.onStateEnter("detecting", () => {
+          sounds.bark.play();
           this.play("detect");
-
-          k.wait(1, () => {
-            barkingSound.stop();
-            this.enterState("jump");
+          k.wait(1.5, () => {
+            sounds.bark.stop();
+            this.enterState("jumping");
           });
         });
 
-        this.onStateEnter("jump", () => {
-          barkingSound.play();
+        this.onStateEnter("jumping", () => {
+          sounds.bark.play();
           this.play("jump");
 
           k.wait(0.5, () => {
-            barkingSound.stop();
+            sounds.bark.stop();
             this.use(k.z(0));
-            this.enterState("drop");
+            this.enterState("landing");
           });
         });
 
-        this.onStateUpdate("jump", () => {
+        this.onStateUpdate("jumping", () => {
           this.move(100, -50);
         });
 
-        this.onStateEnter("drop", async () => {
-          await k.tween(
-            this.pos.y,
-            125,
-            0.5,
-            (newY) => (this.pos.y = newY),
-            k.easings.linear,
-          );
-
+        this.onStateEnter("landing", async () => {
+          await this.moveToY(GROUND_Y);
+          await k.wait(1); // Wait longer after landing
           gameManager.enterState("round-start", true);
         });
       },
 
-      async slideUpAndDown(this: GameObj) {
+      async moveToY(this: GameObj, targetY: number) {
         await k.tween(
           this.pos.y,
-          90,
+          targetY,
           0.5,
-          (newY) => (this.pos.y = newY),
-          k.easings.linear,
-        );
-
-        await k.wait(1);
-
-        await k.tween(
-          this.pos.y,
-          125,
-          0.5,
-          (newY) => (this.pos.y = newY),
+          (y) => (this.pos.y = y),
           k.easings.linear,
         );
       },
 
-      async catchFallenDuck(this: GameObj) {
-        successfulHuntSound.play();
+      async popUpAnimation(this: GameObj) {
+        await this.moveToY(JUMP_HEIGHT);
+        await k.wait(1);
+        await this.moveToY(GROUND_Y);
+      },
 
+      async celebrateCatch(this: GameObj) {
+        sounds.success.play();
         this.play("catch");
-
-        await this.slideUpAndDown();
-
+        await this.popUpAnimation();
         gameManager.enterState("hunt-end");
       },
 
-      async mockPlayer(this: GameObj) {
-        laughingSound.play();
-
+      async laughAtPlayer(this: GameObj) {
+        sounds.laugh.play();
         this.play("mock");
-
-        await this.slideUpAndDown();
-
+        await this.popUpAnimation();
         gameManager.enterState("hunt-end");
       },
     },

@@ -1,19 +1,19 @@
 import type { GameObj } from "kaplay";
 import k from "./kaplayCtx";
 
-const makeGameManager = () => {
-  const defaults = {
-    currentScore: 0,
-    currentRoundNb: 0,
-    currentHuntNb: 0,
-    nbBulletsLeft: 3,
-    nbDucksShotInRound: 0,
-    preySpeed: 100,
-  };
+const defaultGameState = {
+  currentScore: 0,
+  currentRound: 0,
+  currentHunt: 0,
+  bulletsLeft: 3,
+  ducksShotThisRound: 0,
+  duckSpeed: 100,
+};
 
-  return k.add([
-    k.state("menu", [
-      "menu",
+const createGameManager = () =>
+  k.add([
+    k.state("idle", [
+      "idle",
       "round-start",
       "round-end",
       "hunt-start",
@@ -22,14 +22,13 @@ const makeGameManager = () => {
       "duck-escaped",
     ]),
     {
-      isGamePaused: false,
-      ...defaults,
-      resetGameState(this: GameObj) {
-        Object.assign(this, defaults);
+      isPaused: false,
+      ...defaultGameState,
+
+      reset(this: GameObj) {
+        Object.assign(this, defaultGameState);
       },
     },
   ]);
-};
 
-const gameManager = makeGameManager();
-export default gameManager;
+export default createGameManager();
