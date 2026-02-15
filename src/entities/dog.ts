@@ -43,7 +43,7 @@ const makeDog = (position: Vec2) => {
           sniffingSound.play();
 
           k.wait(2, () => {
-            sniffingSound.play();
+            sniffingSound.stop();
             if (nbSnifs === 2) {
               this.enterState("detect");
               return;
