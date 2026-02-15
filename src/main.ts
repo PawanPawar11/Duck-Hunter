@@ -3,12 +3,16 @@ import { COLORS, FONT_CONFIG } from "./constant";
 import gameManager from "./gameManager";
 import formatScore from "./utils";
 import makeDog from "./entities/dog";
+import makeDuck from "./entities/duck";
 
-/* -------------------- ASSET LOADING -------------------- */
+/* ========================================================= */
+/* ====================== ASSETS =========================== */
+/* ========================================================= */
 
 k.loadSprite("background", "./graphics/background.png");
 k.loadSprite("menu", "./graphics/menu.png");
 k.loadSprite("cursor", "./graphics/cursor.png");
+k.loadSprite("text-box", "./graphics/text-box.png");
 
 k.loadFont("nes", "./fonts/nintendo-nes-font/nintendo-nes-font.ttf");
 
@@ -69,13 +73,6 @@ k.scene("main-menu", () => {
     k.pos(k.center().x, k.center().y + 40),
   ]);
 
-  k.add([
-    k.text("MADE BY PAWAN PAWAR", FONT_CONFIG),
-    k.pos(10, 215),
-    k.color(COLORS.BLUE),
-    k.opacity(0.5),
-  ]);
-
   let storedBestScore = k.getData("best-score") as number | null;
 
   if (storedBestScore == null) {
@@ -83,6 +80,7 @@ k.scene("main-menu", () => {
     k.setData("best-score", 0);
   }
 
+  // Ensure it's a number
   storedBestScore = Number(storedBestScore) || 0;
 
   k.add([
@@ -103,7 +101,7 @@ k.scene("game", () => {
 
   /* ---------- Background ---------- */
 
-  k.add([k.rect(k.width(), k.height()), k.color(COLORS.BLUE), "sky"]);
+  k.add([k.rect(k.width(), k.height()), k.color(COLORS.SKY_BLUE), "sky"]);
   k.add([k.sprite("background"), k.pos(0, -10), k.z(1)]);
 
   /* ---------- UI ---------- */
@@ -128,29 +126,43 @@ k.scene("game", () => {
     k.color(0, 0, 0),
   ]);
 
-  const duckIconContainer = k.add([k.pos(95, 198)]);
+  /* ---------- Duck Icons UI ---------- */
+
+  const duckIcons: any[] = [];
+  const DUCK_ICON_START_X = 95;
+  const DUCK_ICON_Y = 198;
+  const DUCK_ICON_SPACING = 8;
+
+  // Create 10 duck icons
   for (let i = 0; i < 10; i++) {
-    duckIconContainer.add([k.rect(7, 9), k.pos(1 + i * 8, 0), `duckIcon-${i}`]);
+    const duckIcon = k.add([
+      k.rect(8, 9),
+      k.pos(DUCK_ICON_START_X + i * DUCK_ICON_SPACING, DUCK_ICON_Y),
+      k.color(255, 255, 255), // Start as white
+      { killed: false },
+    ]);
+    duckIcons.push(duckIcon);
   }
 
   /* ---------- Dog ---------- */
 
   const hunterDog = makeDog(k.vec2(0, k.center().y));
-  hunterDog.searchForDucks();
+  hunterDog.startSearching();
 
   /* ========================================================= */
-  /* ==================== GAME STATES ======================== */
+  /* ==================== STATE HANDLERS ==================== */
   /* ========================================================= */
 
   const onRoundStart = gameManager.onStateEnter(
     "round-start",
     async (isFirstRound) => {
-      if (!isFirstRound) gameManager.preySpeed += 50;
+      // Don't increase speed on first round
+      if (!isFirstRound) gameManager.duckSpeed += 50;
 
       k.play("ui-appear");
 
-      gameManager.currentRoundNb++;
-      roundText.text = String(gameManager.currentRoundNb);
+      gameManager.currentRound++;
+      roundText.text = String(gameManager.currentRound);
 
       const roundBox = k.add([
         k.sprite("text-box"),
@@ -158,30 +170,104 @@ k.scene("game", () => {
         k.pos(k.center().x, k.center().y - 50),
         k.z(2),
       ]);
-
       roundBox.add([
         k.text("ROUND", FONT_CONFIG),
         k.anchor("center"),
         k.pos(0, -10),
       ]);
-
       roundBox.add([
-        k.text(String(gameManager.currentRoundNb), {
-          font: "nes",
-          size: 8,
-        }),
+        k.text(String(gameManager.currentRound), FONT_CONFIG),
         k.anchor("center"),
         k.pos(0, 4),
       ]);
 
+      // Reset all duck icons to white at the start of each round
+      duckIcons.forEach((icon) => {
+        icon.color = k.Color.fromHex("#FFFFFF");
+        icon.killed = false;
+      });
+
       await k.wait(1);
       k.destroy(roundBox);
-
       gameManager.enterState("hunt-start");
     },
   );
 
-  gameManager.enterState("round-start");
+  const onHuntStart = gameManager.onStateEnter("hunt-start", () => {
+    // Destroy any existing ducks before spawning a new one
+    k.destroyAll("duck");
+
+    // Safety check - only proceed if we're not paused
+    if (gameManager.isPaused) return;
+
+    gameManager.currentHunt++;
+
+    const duck = makeDuck(
+      String(gameManager.currentHunt - 1),
+      gameManager.duckSpeed,
+    );
+
+    duck.setBehavior();
+  });
+
+  const onDuckHunted = gameManager.onStateEnter("duck-hunted", () => {
+    gameManager.bulletsLeft = 3;
+
+    // Mark the current duck as killed (turn icon red)
+    const currentDuckIndex = gameManager.currentHunt - 1;
+    if (currentDuckIndex >= 0 && currentDuckIndex < duckIcons.length) {
+      duckIcons[currentDuckIndex].color = k.Color.fromHex(COLORS.RED);
+      duckIcons[currentDuckIndex].killed = true;
+    }
+
+    hunterDog.celebrateCatch();
+  });
+
+  const onDuckEscaped = gameManager.onStateEnter("duck-escaped", () => {
+    hunterDog.laughAtPlayer();
+  });
+
+  const onHuntEnd = gameManager.onStateEnter("hunt-end", () => {
+    if (gameManager.currentHunt <= 9) {
+      gameManager.enterState("hunt-start");
+      return;
+    }
+
+    gameManager.currentHunt = 0;
+    gameManager.enterState("round-end");
+  });
+
+  const onRoundEnd = gameManager.onStateEnter("round-end", () => {
+    if (gameManager.ducksShotThisRound < 6) {
+      // Update best score if current score is higher
+      const currentBest = Number(k.getData("best-score")) || 0;
+      if (gameManager.currentScore > currentBest) {
+        k.setData("best-score", gameManager.currentScore);
+      }
+      k.go("game-over");
+      return;
+    }
+
+    if (gameManager.ducksShotThisRound === 10) {
+      gameManager.currentScore += 500;
+      // Update best score
+      const currentBest = Number(k.getData("best-score")) || 0;
+      if (gameManager.currentScore > currentBest) {
+        k.setData("best-score", gameManager.currentScore);
+      }
+    }
+
+    gameManager.ducksShotThisRound = 0;
+    gameManager.enterState("round-start");
+  });
+
+  /* ---------- Start AFTER registering ---------- */
+
+  // Don't start immediately - let the dog animation trigger the round start
+
+  /* ========================================================= */
+  /* ===================== INPUT ============================= */
+  /* ========================================================= */
 
   const crosshair = k.add([
     k.sprite("cursor"),
@@ -191,19 +277,18 @@ k.scene("game", () => {
   ]);
 
   k.onClick(() => {
-    if (gameManager.state === "hunt-start" && !gameManager.isGamePaused) {
-      if (gameManager.nbBulletsLeft > 0) {
+    if (gameManager.state === "hunt-start" && !gameManager.isPaused) {
+      if (gameManager.bulletsLeft > 0) {
         k.play("gun-shot", { volume: 0.5 });
+        gameManager.bulletsLeft--;
       }
-
-      gameManager.nbBulletsLeft--;
     }
   });
 
   k.onUpdate(() => {
     scoreText.text = formatScore(gameManager.currentScore, 6);
 
-    bulletMask.width = (3 - gameManager.nbBulletsLeft) * 7.5;
+    bulletMask.width = (3 - gameManager.bulletsLeft) * 7.5;
 
     crosshair.moveTo(k.mousePos());
   });
@@ -221,11 +306,29 @@ k.scene("game", () => {
     ambientSound.stop();
 
     onRoundStart.cancel();
-
-    gameManager.resetGameState();
+    onHuntStart.cancel();
+    onHuntEnd.cancel();
+    onRoundEnd.cancel();
+    onDuckHunted.cancel();
+    onDuckEscaped.cancel();
+    gameManager.reset();
   });
 });
 
-k.scene("game-over", () => {});
+/* ========================================================= */
+/* ====================== GAME OVER ======================== */
+/* ========================================================= */
+
+k.scene("game-over", () => {
+  k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0)]);
+
+  k.add([
+    k.text("GAME OVER!", FONT_CONFIG),
+    k.anchor("center"),
+    k.pos(k.center()),
+  ]);
+
+  k.wait(2, () => k.go("main-menu"));
+});
 
 k.go("main-menu");
