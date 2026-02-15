@@ -1,5 +1,5 @@
 import k from "./kaplayCtx";
-import { COLORS } from "./constant";
+import { COLORS, FONT_CONFIG } from "./constant";
 import gameManager from "./gameManager";
 import formatScore from "./utils";
 import makeDog from "./entities/dog";
@@ -64,30 +64,29 @@ k.scene("main-menu", () => {
   k.add([k.sprite("menu")]);
 
   k.add([
-    k.text("CLICK TO START", { font: "nes", size: 8 }),
+    k.text("CLICK TO START", FONT_CONFIG),
     k.anchor("center"),
     k.pos(k.center().x, k.center().y + 40),
   ]);
 
   k.add([
-    k.text("MADE BY JSLEGEND", { font: "nes", size: 8 }),
+    k.text("MADE BY PAWAN PAWAR", FONT_CONFIG),
     k.pos(10, 215),
     k.color(COLORS.BLUE),
     k.opacity(0.5),
   ]);
 
-  const storedBestScore = k.getData("best-score");
-  const bestScore = storedBestScore?.value ?? 0;
+  let storedBestScore = k.getData("best-score") as number | null;
 
-  if (!storedBestScore) {
-    k.setData("best-score", { value: 0 });
+  if (storedBestScore == null) {
+    storedBestScore = 0;
+    k.setData("best-score", 0);
   }
 
+  storedBestScore = Number(storedBestScore) || 0;
+
   k.add([
-    k.text(`TOP SCORE = ${formatScore(bestScore, 6)}`, {
-      font: "nes",
-      size: 8,
-    }),
+    k.text(`TOP SCORE = ${formatScore(storedBestScore, 6)}`, FONT_CONFIG),
     k.pos(55, 184),
     k.color(COLORS.RED),
   ]);
@@ -110,22 +109,17 @@ k.scene("game", () => {
   /* ---------- UI ---------- */
 
   const scoreText = k.add([
-    k.text(formatScore(0, 6), { font: "nes", size: 8 }),
+    k.text(formatScore(0, 6), FONT_CONFIG),
     k.pos(192, 197),
     k.z(2),
   ]);
 
   const roundText = k.add([
-    k.text("1", { font: "nes", size: 8 }),
+    k.text("1", FONT_CONFIG),
     k.pos(42, 182),
     k.z(2),
     k.color(COLORS.RED),
   ]);
-
-  const duckIconContainer = k.add([k.pos(95, 198)]);
-  for (let i = 0; i < 10; i++) {
-    duckIconContainer.add([k.rect(7, 9), k.pos(i * 8 + 1, 0), `duckIcon-${i}`]);
-  }
 
   const bulletMask = k.add([
     k.rect(0, 8),
@@ -133,6 +127,11 @@ k.scene("game", () => {
     k.z(2),
     k.color(0, 0, 0),
   ]);
+
+  const duckIconContainer = k.add([k.pos(95, 198)]);
+  for (let i = 0; i < 10; i++) {
+    duckIconContainer.add([k.rect(7, 9), k.pos(1 + i * 8, 0), `duckIcon-${i}`]);
+  }
 
   /* ---------- Dog ---------- */
 
@@ -161,7 +160,7 @@ k.scene("game", () => {
       ]);
 
       roundBox.add([
-        k.text("ROUND", { font: "nes", size: 8 }),
+        k.text("ROUND", FONT_CONFIG),
         k.anchor("center"),
         k.pos(0, -10),
       ]);

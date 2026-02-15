@@ -4,7 +4,7 @@ export const COLORS = {
   BEIGE: "#FFFCC5",
 };
 
-export const fontConfig = {
+export const FONT_CONFIG = {
   font: "nes",
   size: 8,
 };

@@ -42,7 +42,7 @@ const makeDuck = (duckId: string, speed: number) => {
 
         this.direction = movementDirections[directionIndex];
 
-        if (this.direction < 0) {
+        if (this.direction.x < 0) {
           this.flipX = true;
         }
 
@@ -74,7 +74,7 @@ const makeDuck = (duckId: string, speed: number) => {
             this.pos.x > k.width() + 10 || this.pos.x < -10;
 
           const hitVerticalBoundary =
-            this.pos.x > k.width() + 10 || this.pos.x < -10;
+            this.pos.y < -10 || this.pos.y > k.height() - 70;
 
           if (this.aliveTime < this.escapeAfter && hitHorizontalBoundary) {
             this.bounceHorizontally();
@@ -84,7 +84,7 @@ const makeDuck = (duckId: string, speed: number) => {
             this.bounceVertically();
           }
 
-          this.move(this.direction.scale(this.speed));
+          this.move(k.vec2(this.direction).scale(this.speed));
         });
 
         // ---------- Shot State ----------
